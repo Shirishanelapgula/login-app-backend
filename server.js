@@ -1,11 +1,20 @@
 require('dotenv').config()
+const cors = require('cors');
 const express = require("express");
 const mongoose = require("mongoose");
 const userRoute = require("./routes/userRoute");
 const errorMiddleware = require("./middleware/errorMiddleware")
 const app = express();
-const PORT = process.env.PORT
 const MONGO_URL = process.env.MONGO_URL
+const FRONTEND = process.env.FRONTEND
+const PORT = process.env.PORT || 3000
+
+const corsOptions = {
+    origin: FRONTEND ,
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  }
+
+app.use(cors(corsOptions))
 
 app.use(express.json())
 
