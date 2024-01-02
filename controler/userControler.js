@@ -66,24 +66,22 @@ const userLogin = asyncHandler(async(req,res)=>{
         const {email,password} = req.body
         const existingUserData = await User.findOne({email:email})
 
-        const res_data = await bcrypt.compare(password, existingUserData.password)
-
-        if(!res_data){
-            res.status(401).json({message:"Incorrect Password"})
-        }
-        if(res_data){
-            res.status(200).json({message:"You logged in successfully"})
-
-        }
-
-
 
         if(!existingUserData){
-            res.status(404).json({message: "Please register before login"})
+            res.status(404).json({message: "Email does not exist ,please enter correct email or register before login"})
 
+        }else{
+
+            const res_data = await bcrypt.compare(password, existingUserData.password)
+
+            if(!res_data){
+                res.status(401).json({message:"Incorrect Password"})
+            }
+            if(res_data){
+                res.status(200).json({message:"You logged in successfully"})
+
+            }
         }
-
-
 
     }catch(error){
         res.status(404).json({message:error.message})
