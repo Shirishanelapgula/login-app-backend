@@ -1,8 +1,12 @@
 const mongoose = require("mongoose")
 
+const bcrypt = require("bcrypt")
+
+
 const User = require("../models/userModels")
 
 const asyncHandler = require("express-async-handler")
+const { response } = require("express")
 
 
 const createUser = asyncHandler(async (req,res) => {
@@ -18,8 +22,17 @@ const createUser = asyncHandler(async (req,res) => {
             }
         }
 
-        const response = await User.create(req.body)
-        res.status(200).json(response)
+        const hashedPassword = await bcrypt.hash(req.body.password , 10)
+
+        const body_data = {
+            name : req.body.name,
+            email : req.body.email,
+            password : hashedPassword
+
+        }
+
+        const response = await User.create(body_data)
+        res.status(200).json({message: `User created successfully`})
 
     }catch(error){
         res.status(500).json({message: error.message})
@@ -50,26 +63,22 @@ const deleteUser = asyncHandler(async (req,res) => {
 const userLogin = asyncHandler(async(req,res)=>{
     try{
 
-        const existingUserData = await User.find({})
+        const {email,password} = req.body
+        const existingUserData = await User.findOne({email:email})
 
-        let userExist = false
+        const res_data = await bcrypt.compare(password, existingUserData.password)
 
-        existingUserData.filter((each)=>{
-            if (each.name === req.body.name && each.email === req.body. email){
-                userExist = true
-                res.status(200).json({message: "You logged in successfully"})
-            }
-            else if (each.name === req.body.name && each.email !== req.body. email){
-                userExist = true
-                res.status(401).json({message: "Incorrect email"})
-            }
-            else if (each.name !== req.body.name && each.email === req.body. email){
-                userExist = true
-                res.status(401).json({message: "Incorrect name"})
-            }
-        })
+        if(!res_data){
+            res.status(401).json({message:"Incorrect Password"})
+        }
+        if(res_data){
+            res.status(200).json({message:"You logged in successfully"})
 
-        if(!userExist){
+        }
+
+
+
+        if(!existingUserData){
             res.status(404).json({message: "Please register before login"})
 
         }
@@ -81,7 +90,6 @@ const userLogin = asyncHandler(async(req,res)=>{
     }
 
 })
-
 
 const getAllUsers = asyncHandler(async(req,res)=>{
     try{
